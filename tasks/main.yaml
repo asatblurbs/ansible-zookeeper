@@ -31,36 +31,46 @@
     path: "{{ zookeeper_install_dir }}"
   register: dir
 
-- name: Download Apache ZooKeeper
-  get_url:
-    url: "{{ zookeeper_mirror }}/zookeeper-{{ zookeeper_version }}/{{ zookeeper_package }}"
-    dest: /tmp
-  when: not dir.stat.exists
-  tags:
-    - zookeeper_download
+- block:
+  - name: Download Apache ZooKeeper
+    get_url:
+      url: "{{ zookeeper_mirror }}/zookeeper-{{ zookeeper_version }}/{{ zookeeper_package }}"
+      dest: /tmp
+    when: zookeeper_local_dir | length == 0
+    tags:
+      - zookeeper_download
+  
+  - name: Copy locally download Apache ZooKeeper
+    copy:
+      src: "{{ zookeeper_local_dir }}"
+      dest: /tmp
+    when: zookeeper_local_dir | length > 0
+    tags:
+      - zookeeper_download
 
-- name: Create ZooKeeper installation dir {{ zookeeper_install_dir }}
-  file:
-    path: "{{ zookeeper_install_dir }}"
-    state: directory
-    group: "{{ zookeeper_group }}"
-    owner: "{{ zookeeper_user }}"
-    mode: 0755
-  when: not dir.stat.exists
-  tags:
-    - zookeeper_dirs
+  - name: Create ZooKeeper installation dir {{ zookeeper_install_dir }}
+    file:
+      path: "{{ zookeeper_install_dir }}"
+      state: directory
+      group: "{{ zookeeper_group }}"
+      owner: "{{ zookeeper_user }}"
+      mode: 0755
+    #when: not dir.stat.exists
+    tags:
+      - zookeeper_dirs
 
-- name: Unpack Apache ZooKeeper
-  unarchive:
-    src: /tmp/{{ zookeeper_package }}
-    dest: "{{ zookeeper_install_dir }}"
-    copy: no
-    extra_opts: [--strip-components=1]
-    group: "{{ zookeeper_group }}"
-    owner: "{{ zookeeper_user }}"
+  - name: Unpack Apache ZooKeeper
+    unarchive:
+      src: /tmp/{{ zookeeper_package }}
+      dest: "{{ zookeeper_install_dir }}"
+      copy: no
+      extra_opts: [--strip-components=1]
+      group: "{{ zookeeper_group }}"
+      owner: "{{ zookeeper_user }}"
+    #when: not dir.stat.exists
+    tags:
+      - zookeeper_unpack
   when: not dir.stat.exists
-  tags:
-    - zookeeper_unpack
 
 - name: Create symlink to ZooKeeper installation
   file:
