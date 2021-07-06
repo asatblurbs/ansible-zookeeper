@@ -36,15 +36,15 @@
     get_url:
       url: "{{ zookeeper_mirror }}/zookeeper-{{ zookeeper_version }}/{{ zookeeper_package }}"
       dest: /tmp
-    when: zookeeper_local_dir | length == 0
+    when: zookeeper_local_binary_downloads | length == 0
     tags:
       - zookeeper_download
   
   - name: Copy locally download Apache ZooKeeper
     copy:
-      src: "{{ zookeeper_local_dir }}"
+      src: "{{ zookeeper_local_binary_downloads }}"
       dest: /tmp
-    when: zookeeper_local_dir | length > 0
+    when: zookeeper_local_binary_downloads | length > 0
     tags:
       - zookeeper_download
 
